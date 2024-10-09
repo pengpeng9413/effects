@@ -196,7 +196,11 @@
   </head>
   <body>
     <article class="container">
-      <main class="main"><div class="canvas" id="canvas"></div></main>
+      <main class="main">
+        <div class="canvas" id="canvas">
+          <canvas id="c" width="500" height="500"></canvas>
+        </div>
+      </main>
       <aside class="props">
         <h2 class="effects-title">属性</h2>
         <div class="props-item">
@@ -310,250 +314,40 @@
         <div id="effects-wrap"></div>
       </aside>
     </article>
-    <script>
-      const effects = [
-        {
-          name:'滚动',
-          items:{
-            ScrollLeft:'向左滚动',
-            ScrollRight:'向右滚动',
-          }
-        },
-        {
-          name: "扩展",
-          items: {
-            PullInUp: "向上扩展",
-            PullInDown: "向下扩展",
-            PullInLeft: "向左扩展",
-            PullInRight: "向右扩展",
-            ZoomIn: "中间向外扩展",
-            ZoomInX: "左右扩展",
-            ZoomInY: "上下扩展",
-          },
-        },
-        {
-          name: "平移",
-          items: {
-            SlideInUp: "向上平移",
-            SlideInDown: "向下平移",
-            SlideInLeft: "向左平移",
-            SlideInRight: "向右平移",
-          },
-        },
-        {
-          name: "压缩",
-          items: {
-            PressInUp: "向上压缩",
-            PressInDown: "向下压缩",
-            PressInLeft: "向左压缩",
-            PressInRight: "向右压缩",
-            PressInX: "左右压缩",
-            PressInY: "上下压缩",
-          },
-        },
-        {
-          name: "堆积",
-          items: {
-            StackInTop: "向上堆积",
-            StackInBottom: "向下堆积",
-            StackInLeft: "向左堆积",
-            StackInRight: "向右堆积",
-          },
-        },
-        {
-          name: "镭射",
-          items: {
-            TopLaser: "上镭射",
-            BottomLaser: "下镭射",
-            RightLaser: "右镭射",
-            LeftLaser: "左镭射",
-          },
-        },
-        {
-          name: "其他",
-          items: {
-            UncoverFromTop: "向下展开卷轴",
-            UncoverFromBottom: "向上展开卷轴",
-            ShutterX: "水平百叶窗",
-            ShutterY: "垂直百叶窗",
-            ZoomFullScreen: "变焦全屏",
-            Wheel: "轮子",
-            Tooth: "上下齿合",
-            FadeIn: "淡入",
-            FadeOut: "淡出",
-            Random: "随机",
-          },
-        },
-      ];
+    <script type="text/javascript">
+      var c = document.getElementById("c"), //canvas
+        ctx = c.getContext("2d"),
+        img = new Image(),
+        offset = 0,
+        fps = 60,
+        speed = 80 / fps; //每帧的速度
 
-      // 特效填充
-      const $effectsWrap = document.getElementById("effects-wrap");
-      {
-        let effectHtml = "";
-        effects.forEach(function (group) {
-          effectHtml +=
-            '\
-        <details class="effect-group" open>\
-          <summary class="effect-group__title">' +
-            group.name +
-            " (" +
-            Object.keys(group.items).length +
-            ')</summary>\
-              <ul class="effect-group__items">\
-        ';
-          Object.keys(group.items).forEach(function (effect) {
-            effectHtml +=
-              '<li class="effect-item" data-effect="' +
-              effect +
-              '">' +
-              group.items[effect] +
-              "</li>";
-          });
-          effectHtml +=
-            "\
-          </ul>\
-        </details>";
-        });
+      img.src = "test.png";
+     
 
-        $effectsWrap.innerHTML = effectHtml;
+      function draw(ctx) {
+        ctx.save();
+        //offset < c.width ? (offset + speed) : 0
+        //后者不能简单重置为0，由于速度过快offset可能超过canvas的大小
+        //故需要计算两者的差值
+        offset = offset < c.width ? offset + speed : offset - c.width;
+        //通过translate来实现图片的滚动
+        ctx.translate(-offset, 0);
+
+        //只需将图片正常地绘制在画面上即可，不需要操作其位置
+        ctx.drawImage(img, 0, 0,c.width,c.height);
+        ctx.drawImage(img, c.width, 0,c.width,c.height);
+        ctx.restore();
       }
-
-      const DEFAULT_IMAGE =
-        "https://smohan.oss-cn-beijing.aliyuncs.com/test/boy-child-cute-35537.jpg";
-      let currentEffect = "Random";
-      let currentImage = DEFAULT_IMAGE;
-      const defaults = {
-        width: 500,
-        height: 500,
-        duration: 2000,
-        easing: "linear",
-        type: currentEffect,
-      };
-
-      const $animateWrap = document.getElementById("canvas");
-      function init(options) {
-        window.MoEffects.animate($animateWrap, currentImage, options);
-      }
-
       window.onload = function () {
-        init(defaults);
-        toggleEffectItemActive(true);
+        (function () {
+          console.log("sss")
+          ctx.clearRect(0, 0, c.width, c.height);
+          draw(ctx);
+          requestAnimationFrame(arguments.callee, c);
+        })();
       };
-
-      const $fdDuration = document.getElementById("fd-duration");
-      const $fdWidth = document.getElementById("fd-width");
-      const $fdHeight = document.getElementById("fd-height");
-      const $fdEasing = document.getElementById("fd-easing");
-
-      function play() {
-        var options = {
-          width: $fdWidth.value,
-          height: $fdHeight.value,
-          duration: $fdDuration.value,
-          easing: $fdEasing.value,
-        };
-
-        for (let k in options) {
-          if (k !== "easing" && isNaN(+options[k])) {
-            options[k] = defaults[k];
-          }
-        }
-
-        options.type = currentEffect;
-        init(options);
-      }
-
-      let playerTimer = null;
-
-      function start() {
-        play();
-        playerTimer && clearInterval(playerTimer);
-        const isEnableLoop = $loopSwitch.checked;
-        if (isEnableLoop) {
-          const time = Math.max($loopTime.value, $fdDuration.value);
-          playerTimer = setInterval(play, time);
-          $playBtn.textContent = "停止";
-        } else {
-          $playBtn.textContent = "播放";
-        }
-      }
-
-      function stop() {
-        playerTimer && clearInterval(playerTimer);
-        playerTimer = null;
-        $playBtn.textContent = "播放";
-      }
-
-      const $loopTimeWrap = document.getElementById("fd-loop-duration_item");
-      const $loopSwitch = document.getElementById("fd-loop");
-      const $loopTime = document.getElementById("fd-loop-duration");
-      const $playBtn = document.getElementById("play");
-      $loopSwitch.addEventListener("change", function () {
-        const checked = this.checked;
-        $loopTimeWrap.style.display = checked ? "" : "none";
-      });
-
-      $playBtn.addEventListener("click", function () {
-        const isEnableLoop = $loopSwitch.checked;
-        if (isEnableLoop) {
-          if (playerTimer) {
-            stop();
-          } else {
-            start();
-          }
-        } else {
-          play();
-        }
-      });
-
-      // 特效切换
-      const $effects = [...$effectsWrap.querySelectorAll(".effect-item")];
-      const $effectViewport = document.getElementById("effectViewport");
-      function toggleEffectItemActive(scroll = false) {
-        $effects.forEach(($item) => {
-          const effect = $item.dataset.effect;
-          if (effect === currentEffect) {
-            $item.classList.add("actived");
-            if (scroll) {
-              const offsetTop = $item.offsetTop;
-              $effectViewport.scrollTo(0, offsetTop);
-            }
-          } else {
-            $item.classList.remove("actived");
-          }
-        });
-      }
-
-      $effectsWrap.addEventListener("click", function (e) {
-        const $item = e.target.closest(".effect-item");
-        if ($item) {
-          const effect = $item.dataset.effect;
-          console.log("==effect==",effect);
-          currentEffect = effect;
-          start();
-          toggleEffectItemActive();
-        }
-      });
-
-      document
-        .getElementById("customImage")
-        .addEventListener("change", function (e) {
-          const file = e.target.files[0];
-          currentImage = file;
-          start();
-          e.target.value = null;
-        });
-
-      document
-        .getElementById("recoveryImage")
-        .addEventListener("click", function () {
-          if (currentImage === DEFAULT_IMAGE) {
-            return;
-          }
-          currentImage = DEFAULT_IMAGE;
-          start();
-        });
     </script>
-    <script type="text/javascript" src="mo.effects.2b18cd3.js"></script>
+    <script type="text/javascript" src="mo.effects.d9559d0.js"></script>
   </body>
 </html>

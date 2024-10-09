@@ -1,6 +1,8 @@
 import { WithCustormPropsElement } from './'
 import { engine, EngineHandler } from './engine'
 import { TweenHandler } from './tween'
+
+let offset = 0;
 export interface AnimateProps {
   $el: WithCustormPropsElement
   img: HTMLImageElement
@@ -98,8 +100,9 @@ const getRevertImageData = (source: ImageData, target: ImageData) => {
  * @param width 
  * @param height 
  */
-const getTransformCssText = (type: string, progress: number, width: number, height: number) => {
+const getTransformCssText = (type: string, progress: number, width: number, height: number,img?:HTMLImageElement,canvas?:HTMLCanvasElement) => {
   let transform = 'left top'
+ 
   let origin
   switch (type) {
     case 'PullInUp':
@@ -138,6 +141,7 @@ const getTransformCssText = (type: string, progress: number, width: number, heig
       origin = 'left top'
       transform = `translate(0, ${(1 - progress) * -1 * height}px)`
       break
+      // 向右平移
     case 'SlideInRight':
       origin = 'left top'
       transform = `translate(${(1 - progress) * -1 * width}px, 0)`
@@ -178,10 +182,57 @@ const getTransformCssText = (type: string, progress: number, width: number, heig
 // 扩展和平移(动画使用CSS)
 export const animatePullAndSlider = (props: AnimateProps): EngineHandler => {
   const { $el, width, height, img, duration, easing, type } = props
-  const canvas = fillCanvasBeforePlay($el, width, height, img)
-  canvas.style.cssText += getTransformCssText(type, 0, width, height)
-  const handler = (progress: number) => canvas.style.cssText += getTransformCssText(type, progress, width, height)
-  return engine(handler, duration, easing, () => $el.__playing__ = false)
+  console.log("==type==",type);
+  // 容器中填充canvas，借助canvas一个像素一个像素绘制上去；返回canvas节点
+  const canvas = fillCanvasBeforePlay($el, width, height, img);
+  console.log('==canvas==',canvas);
+  // 向左滚动
+  // case 'ScrollLeft':
+  //   console.log("向左滚动");
+  //   // 移动速度，假设是 100px/sec
+  //   const vx= 100;
+  //   const numImages =2;
+  //   totalSeconds += progress;
+  //   // 计算当前X的位置
+  //   const xPos = totalSeconds * vx % width;
+  //   // const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  //   var context = canvas.getContext('2d');
+  //   context.translate(-xPos, 0);
+  //   for (var i = 0; i < numImages; i++) {
+  //     context.drawImage(img, i * img.width, 0);
+  //   }
+  //   // transform = `translate(${(1 - progress) * width}px, 0)`
+  //   break;
+  //   // 向右滚动
+  // case 'ScrollRight':
+  //   console.log("向右滚动");
+  //   transform =`translate(${(1 - progress) * -1 * width}px, 0)`
+  //   break;
+  if(type==='ScrollLeft' || type ==='ScrollRight'){
+    // 向左滚动
+    const speed = 2; // 每帧的速度，每帧移动两个单位，todo： 这个要结合屏精灵的代码进行速度参数设置
+    const handler = (progress:number)=> {
+      var context = canvas.getContext('2d');
+      // 清掉前一帧画上去的像素
+      context.clearRect(0,0,width,height);
+      context.save();
+      // 每帧不断累加这个偏移值
+      offset = offset < width ? (offset + speed) : (offset - width);
+      // translate 正值为向右移动，负值为向左移动
+      context.translate(type==='ScrollLeft'?-offset:offset,0); 
+      context.drawImage(img,0,0,width,height);
+      context.drawImage(img,type==='ScrollLeft'?width:-width,0,width,height);
+      context.restore();
+    }
+    return engine(handler, duration, easing, () => $el.__playing__ = false)
+  }else{
+      // 借助css 动画: 这行的作用是做初始化
+    canvas.style.cssText += getTransformCssText(type, 0, width, height)
+    // 这里handler 涉及缓动特效参数
+    const handler = (progress: number) => canvas.style.cssText += getTransformCssText(type, progress, width, height)
+    return engine(handler, duration, easing, () => $el.__playing__ = false)
+  }
+
 }
 
 // 渐隐渐现(动画使用CSS)

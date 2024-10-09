@@ -11,13 +11,16 @@ type EffectType =
   'PullInLeft' |
   'PullInRight' |
   'ZoomIn' |
-  'ZommInX' |
+  'ZoomInX' |
   'ZoomInY' |
   // [平移] 上下左右
   'SlideInUp' |
   'SlideInDown' |
   'SlideInLeft' |
   'SlideInRight' |
+  // 滚动
+  'ScrollLeft' |
+  'ScrollRight' |
   // [挤压] 上下左右 
   'PressInUp' |
   'PressInDown' |
@@ -62,12 +65,14 @@ const EffectsList: Array<EffectType> = [
   'PullInLeft',
   'PullInRight',
   'ZoomIn',
-  'ZommInX',
+  'ZoomInX',
   'ZoomInY',
   'SlideInUp',
   'SlideInDown',
   'SlideInLeft',
   'SlideInRight',
+  'ScrollLeft',
+  'ScrollRight',
   'PressInUp',
   'PressInDown',
   'PressInLeft',
@@ -219,7 +224,7 @@ const animate = function ($wrap: WithCustormPropsElement, image: HTMLImageElemen
     case 'PullInLeft':
     case 'PullInRight':
     case 'ZoomIn':
-    case 'ZommInX':
+    case 'ZoomInX':
     case 'ZoomInY':
     case 'SlideInUp':
     case 'SlideInDown':
@@ -231,7 +236,9 @@ const animate = function ($wrap: WithCustormPropsElement, image: HTMLImageElemen
     case 'PressInRight':
     case 'PressInX':
     case 'PressInY':
-      play = animatePullAndSlider(animateProps)
+    case 'ScrollLeft':
+    case 'ScrollRight':
+      play = animatePullAndSlider(animateProps); // 以上全部走这
       break
     case 'UncoverFromTop':
     case 'UncoverFromBottom':
@@ -276,7 +283,7 @@ const animate = function ($wrap: WithCustormPropsElement, image: HTMLImageElemen
 export class Effect {
 
   /**
-   * animate
+   * animate 最外面的接口函数在这
    * @param el 
    * @param img 
    * @param options 

@@ -413,6 +413,7 @@
     }
 
     const $animateWrap = document.getElementById('canvas')
+    // 初始化
     function init (options) {
       window.MoEffects.animate($animateWrap, currentImage, options)
     }
@@ -427,20 +428,22 @@
     const $fdHeight = document.getElementById('fd-height')
     const $fdEasing = document.getElementById('fd-easing')
 
+    // 播放动画
     function play () {
+      // 配置项
       var options = {
-        width: $fdWidth.value,
-        height: $fdHeight.value,
-        duration: $fdDuration.value,
-        easing: $fdEasing.value,
+        width: $fdWidth.value, // 容器宽
+        height: $fdHeight.value, // 容器高
+        duration: $fdDuration.value, // 特效时长，对应播放时长
+        easing: $fdEasing.value, //   缓动的类型
       }
 
       for (let k in options) {
-        if (k !== 'easing' && isNaN(+options[k])) {
+        if (k !== 'easing' && isNaN(+options[k])) { // 保证除缓动类型，其他必须为数字；如果不为数字的话，则取默认的
           options[k] = defaults[k]
         }
       }
-
+      // 特效名称
       options.type = currentEffect
       init(options)
     }
@@ -448,6 +451,7 @@
 
     let playerTimer = null
 
+    // 播放动画
     function start () {
       play()
       playerTimer && clearInterval(playerTimer)
@@ -506,11 +510,12 @@
         }
       })
     }
-
+    // 特效点击
     $effectsWrap.addEventListener('click', function (e) {
       const $item = e.target.closest('.effect-item')
       if ($item) {
         const effect = $item.dataset.effect
+        // 这个是效果的枚举
         currentEffect = effect
         start()
         toggleEffectItemActive()
