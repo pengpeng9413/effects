@@ -182,10 +182,8 @@ const getTransformCssText = (type: string, progress: number, width: number, heig
 // 扩展和平移(动画使用CSS)
 export const animatePullAndSlider = (props: AnimateProps): EngineHandler => {
   const { $el, width, height, img, duration, easing, type } = props
-  console.log("==type==",type);
   // 容器中填充canvas，借助canvas一个像素一个像素绘制上去；返回canvas节点
   const canvas = fillCanvasBeforePlay($el, width, height, img);
-  console.log('==canvas==',canvas);
   // 向左滚动
   // case 'ScrollLeft':
   //   console.log("向左滚动");
@@ -210,7 +208,7 @@ export const animatePullAndSlider = (props: AnimateProps): EngineHandler => {
   //   break;
   if(type==='ScrollLeft' || type ==='ScrollRight'){
     // 向左滚动
-    const speed = 2; // 每帧的速度，每帧移动两个单位，todo： 这个要结合屏精灵的代码进行速度参数设置
+    const speed = 2; // 每帧的速度，每帧移动两个单位，todo： 这个要结合屏精灵的代码进行速度参数设置，每帧移动2px
     const handler = (progress:number)=> {
       var context = canvas.getContext('2d');
       // 清掉前一帧画上去的像素
