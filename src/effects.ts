@@ -12,6 +12,7 @@ export interface AnimateProps {
   duration: number
   type?: string
   easing?: TweenHandler
+  speed?:number
 }
 
 export interface AnimateCallback {
@@ -198,12 +199,12 @@ const getTransformCssText = (type: string, progress: number, width: number, heig
 
 // 扩展和平移(动画使用CSS)
 export const animatePullAndSlider = (props: AnimateProps): EngineHandler => {
-   const { $el, width, height, img, duration, easing, type } = props
+   const { $el, width, height, img, duration, easing, type,speed } = props
    const canvas = fillCanvasBeforePlay($el, width, height, img)
   
   if(type==='ScrollLeft' || type ==='ScrollRight'){
     // 向左滚动
-    const speed = 2; // 每帧的速度，每帧移动两个单位，todo： 这个要结合屏精灵的代码进行速度参数设置，每帧移动2px
+    // const speed = 2; // 每帧的速度，每帧移动两个单位，todo： 这个要结合屏精灵的代码进行速度参数设置，每帧移动2px
     const handler = (progress:number)=> {
       var context = canvas.getContext('2d');
       // 清掉前一帧画上去的像素

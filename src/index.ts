@@ -117,6 +117,8 @@ export interface Props {
   height?: number
   isContan?: boolean
   easing?: TweenHandler
+  // 滚动速度
+  speed?:number
 }
 
 
