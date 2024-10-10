@@ -4,6 +4,8 @@ import { TweenHandler } from './tween'
 
 /** 滚动偏移距离 */
 let offset = 0;
+/** 动画时间 */
+let totalSeconds =0;
 export interface AnimateProps {
   $el: WithCustormPropsElement
   img: HTMLImageElement
@@ -199,26 +201,49 @@ const getTransformCssText = (type: string, progress: number, width: number, heig
 
 // 扩展和平移(动画使用CSS)
 export const animatePullAndSlider = (props: AnimateProps): EngineHandler => {
-   const { $el, width, height, img, duration, easing, type,speed } = props
+   const { $el, width, height, img, duration, easing, type,speed=3 } = props
    const canvas = fillCanvasBeforePlay($el, width, height, img)
   
   if(type==='ScrollLeft' || type ==='ScrollRight'){
     // 向左滚动
-    // const speed = 2; // 每帧的速度，每帧移动两个单位，todo： 这个要结合屏精灵的代码进行速度参数设置，每帧移动2px
-    const handler = (progress:number)=> {
+    // const speed = 3; // 每帧的速度，每帧移动两个单位，todo： 这个要结合屏精灵的代码进行速度参数设置，每帧移动2px
+
+    // 第一版 方案 ：有点问题
+    // const handler = (progress:number)=> {
+    //   var context = canvas.getContext('2d');
+    //   // 清掉前一帧画上去的像素
+    //   context.clearRect(0,0,width,height);
+    //   context.save();
+    //   // 每帧不断累加这个偏移值
+    //   offset = offset < width ? (offset + speed) : (offset - width);
+    //   // translate 正值为向右移动，负值为向左移动
+    //   context.translate(type==='ScrollLeft'?-offset:offset,0); 
+    //   context.drawImage(img,0,0,width,height);
+    //   context.drawImage(img,type==='ScrollLeft'?width:-width,0,width,height);
+    //   context.restore();
+    // }
+    
+    // 方案二
+    const handler2 =(progress:number)=> {
       var context = canvas.getContext('2d');
-      // 清掉前一帧画上去的像素
       context.clearRect(0,0,width,height);
+
+      var vx = (speed*60)/3; // vx为每秒移动像素值
+      var numImages = Math.ceil(canvas.width / width) + 1;
+      
+      var xpos = progress * vx % width;
+     
       context.save();
-      // 每帧不断累加这个偏移值
-      offset = offset < width ? (offset + speed) : (offset - width);
-      // translate 正值为向右移动，负值为向左移动
-      context.translate(type==='ScrollLeft'?-offset:offset,0); 
-      context.drawImage(img,0,0,width,height);
-      context.drawImage(img,type==='ScrollLeft'?width:-width,0,width,height);
+      context.translate(type==='ScrollLeft'?-xpos:xpos,0);
+      for (var i = 0; i < numImages; i++) {
+          context.drawImage(img, type==='ScrollLeft'?i * width:-i * width , 0,width,height);
+      }
       context.restore();
     }
-    return engine(handler, duration, easing, () => $el.__playing__ = false)
+
+    
+    // return engine(handler, duration, easing, () => $el.__playing__ = false,true)
+    return engine(handler2, duration, easing, () => $el.__playing__ = false,true)
   }else{
       // 借助css 动画: 这行的作用是做初始化
     canvas.style.cssText += getTransformCssText(type, 0, width, height)

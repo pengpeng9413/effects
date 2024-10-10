@@ -214,7 +214,7 @@ const loadImage = (image: string | HTMLImageElement | File, isContan: boolean): 
  * @param options 
  */
 const animate = function ($wrap: WithCustormPropsElement, image: HTMLImageElement, options: Props) {
-  let { type, width, height, duration, easing } = options
+  let { type, width, height, duration, easing,speed } = options
 
   // 随机
   if (type === 'Random' || !EffectsList.includes(type)) {
@@ -228,6 +228,7 @@ const animate = function ($wrap: WithCustormPropsElement, image: HTMLImageElemen
     height,
     duration,
     type,
+    speed,
     easing: typeof easing === 'string' && Tween[easing] ? Tween[easing] : Tween.linear,
   }
 
