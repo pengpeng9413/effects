@@ -26,6 +26,14 @@ type EffectType =
   // 向左向右滚动
   'ScrollLeft' |
   'ScrollRight' |
+  // 向下展开
+  'ExpandDown' |
+  // 向上展开
+  'ExpandUp' | 
+  // 上下展开
+  'ExpandDownAndUp' |
+  // 上下合并
+  'MergeDownAndUp' |
   // 水平挤压
   'PressInX' |
   // 垂直挤压
