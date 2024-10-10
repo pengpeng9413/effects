@@ -18,14 +18,14 @@ type EffectType =
   'SlideInDown' |
   'SlideInLeft' |
   'SlideInRight' |
-  // 滚动
-  'ScrollLeft' |
-  'ScrollRight' |
   // [挤压] 上下左右 
   'PressInUp' |
   'PressInDown' |
   'PressInLeft' |
   'PressInRight' |
+  // 向左向右滚动
+  'ScrollLeft' |
+  'ScrollRight' |
   // 水平挤压
   'PressInX' |
   // 垂直挤压
@@ -107,6 +107,7 @@ export interface Props {
   // 尺寸
   width?: number
   height?: number
+  isContan?: boolean
   easing?: TweenHandler
 }
 
@@ -116,6 +117,7 @@ const defaults: Props = {
   duration: 0,
   width: 500,
   height: 500,
+  isContan: false,
   easing: Tween.linear
 }
 
@@ -144,6 +146,7 @@ const createWrap = (el: WithCustormPropsElement, width?: number, height?: number
   let $wrap = el.__effect_wrap__
   if (!$wrap) {
     $wrap = el.__effect_wrap__ = document.createElement('figure')
+    $wrap.setAttribute('data-isContan', options.isContan ? '1' : '0')
     el.appendChild($wrap)
   }
   $wrap.style.cssText += `display:block;width:${width}px;height:${height}px;position:relative;margin:0;padding:0;overflow:hidden;`
@@ -157,10 +160,11 @@ const IMAGE_CACHES = new Map()
  * 加载图片
  * @param image 
  */
-const loadImage = (image: string | HTMLImageElement | File): Promise<HTMLImageElement> => {
+const loadImage = (image: string | HTMLImageElement | File, isContan: boolean): Promise<HTMLImageElement> => {
   return new Promise<HTMLImageElement | null>(resolve => {
 
     if (IMAGE_CACHES.has(image)) {
+      IMAGE_CACHES.get(image).setAttribute('data-isContan', isContan ? '1' : '0')
       resolve(IMAGE_CACHES.get(image))
     }
 
@@ -168,6 +172,7 @@ const loadImage = (image: string | HTMLImageElement | File): Promise<HTMLImageEl
       const img = new Image()
       img.crossOrigin = ''
       img.src = image
+      img.setAttribute('data-isContan', isContan ? '1' : '0')
       img.onload = function () {
         IMAGE_CACHES.set(image, this)
         resolve(this as HTMLImageElement)
@@ -238,7 +243,7 @@ const animate = function ($wrap: WithCustormPropsElement, image: HTMLImageElemen
     case 'PressInY':
     case 'ScrollLeft':
     case 'ScrollRight':
-      play = animatePullAndSlider(animateProps); // 以上全部走这
+      play = animatePullAndSlider(animateProps)
       break
     case 'UncoverFromTop':
     case 'UncoverFromBottom':
@@ -283,7 +288,7 @@ const animate = function ($wrap: WithCustormPropsElement, image: HTMLImageElemen
 export class Effect {
 
   /**
-   * animate 最外面的接口函数在这
+   * animate
    * @param el 
    * @param img 
    * @param options 
@@ -292,7 +297,7 @@ export class Effect {
     options = Object.assign({}, defaults, options)
     const $wrap = createWrap(el, options.width, options.height, options)
     $wrap.__playing__ && $wrap.__cancel__ && $wrap.__cancel__()
-    loadImage(img)
+    loadImage(img, options.isContan)
       .then(image => animate($wrap, image, options))
   }
 

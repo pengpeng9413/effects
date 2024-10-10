@@ -2,6 +2,7 @@ import { WithCustormPropsElement } from './'
 import { engine, EngineHandler } from './engine'
 import { TweenHandler } from './tween'
 
+/** 滚动偏移距离 */
 let offset = 0;
 export interface AnimateProps {
   $el: WithCustormPropsElement
@@ -55,7 +56,25 @@ const createCanvas = (width: number, height: number, img?: HTMLImageElement): HT
   canvas.style.height = height + 'px'
   if (img) {
     const ctx = canvas.getContext('2d')
-    ctx.drawImage(img, 0, 0, RW, RH)
+    const isContan = img.getAttribute('data-isContan') === '1'
+    if (isContan) {
+      const imgWidth = img.naturalWidth;
+      const imgHeight = img.naturalHeight;
+      let scaleX = canvas.width / imgWidth;
+      let scaleY = canvas.height / imgHeight;
+      let scaleToFit = Math.min(scaleX, scaleY); // 选择较小的缩放比例以完全适应Canvas
+
+      // 计算缩放后图片的宽度和高度
+      const scaledWidth = imgWidth * scaleToFit;
+      const scaledHeight = imgHeight * scaleToFit;
+
+      // 计算绘制图片的起始x和y坐标（居中显示）
+      const x = (canvas.width - scaledWidth) / 2;
+      const y = (canvas.height - scaledHeight) / 2;
+      ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+    } else {
+      ctx.drawImage(img, 0, 0, RW, RH)
+    }
   }
   return canvas
 }
@@ -100,9 +119,8 @@ const getRevertImageData = (source: ImageData, target: ImageData) => {
  * @param width 
  * @param height 
  */
-const getTransformCssText = (type: string, progress: number, width: number, height: number,img?:HTMLImageElement,canvas?:HTMLCanvasElement) => {
+const getTransformCssText = (type: string, progress: number, width: number, height: number) => {
   let transform = 'left top'
- 
   let origin
   switch (type) {
     case 'PullInUp':
@@ -141,7 +159,6 @@ const getTransformCssText = (type: string, progress: number, width: number, heig
       origin = 'left top'
       transform = `translate(0, ${(1 - progress) * -1 * height}px)`
       break
-      // 向右平移
     case 'SlideInRight':
       origin = 'left top'
       transform = `translate(${(1 - progress) * -1 * width}px, 0)`
@@ -181,31 +198,9 @@ const getTransformCssText = (type: string, progress: number, width: number, heig
 
 // 扩展和平移(动画使用CSS)
 export const animatePullAndSlider = (props: AnimateProps): EngineHandler => {
-  const { $el, width, height, img, duration, easing, type } = props
-  // 容器中填充canvas，借助canvas一个像素一个像素绘制上去；返回canvas节点
-  const canvas = fillCanvasBeforePlay($el, width, height, img);
-  // 向左滚动
-  // case 'ScrollLeft':
-  //   console.log("向左滚动");
-  //   // 移动速度，假设是 100px/sec
-  //   const vx= 100;
-  //   const numImages =2;
-  //   totalSeconds += progress;
-  //   // 计算当前X的位置
-  //   const xPos = totalSeconds * vx % width;
-  //   // const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-  //   var context = canvas.getContext('2d');
-  //   context.translate(-xPos, 0);
-  //   for (var i = 0; i < numImages; i++) {
-  //     context.drawImage(img, i * img.width, 0);
-  //   }
-  //   // transform = `translate(${(1 - progress) * width}px, 0)`
-  //   break;
-  //   // 向右滚动
-  // case 'ScrollRight':
-  //   console.log("向右滚动");
-  //   transform =`translate(${(1 - progress) * -1 * width}px, 0)`
-  //   break;
+   const { $el, width, height, img, duration, easing, type } = props
+   const canvas = fillCanvasBeforePlay($el, width, height, img)
+  
   if(type==='ScrollLeft' || type ==='ScrollRight'){
     // 向左滚动
     const speed = 2; // 每帧的速度，每帧移动两个单位，todo： 这个要结合屏精灵的代码进行速度参数设置，每帧移动2px

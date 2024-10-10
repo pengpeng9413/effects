@@ -9,8 +9,8 @@
   "scripts": {
     "start": "webpack-dev-server --env=development --mode=development",
     "docs": "rm -rf docs && webpack --env=documents --mode=production",
-    "build": "rm -rf dist && webpack --env=production --mode=production",
-    "dev":"webpack"
+    "build": "webpack --env=production --mode=production",
+    "dev:build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -29,10 +29,10 @@
     "babel-loader": "^8.0.6",
     "cross-env": "^6.0.0",
     "html-webpack-plugin": "^3.2.0",
-    "serialize-javascript": ">=2.1.1",
     "ts-loader": "^6.1.0",
     "typescript": "^3.6.3",
     "webpack": "^4.40.2",
-    "webpack-cli": "^3.3.9"
+    "webpack-cli": "^3.3.9",
+    "serialize-javascript": ">=2.1.1"
   }
 }

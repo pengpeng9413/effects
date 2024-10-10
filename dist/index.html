@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./mo.effects.510ebb4.js"></script>
+</head>
+<body>
+    <div id="canvas"></div>
+</body>
+</html>
+<script>
+    window.onload = function () {
+        window.MoEffects.animate(document.getElementById('canvas'), 'https://novacloud-dev.oss-cn-hangzhou.aliyuncs.com/pingjl_sit/media/%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E5%A4%B9/%E9%A3%8E%E6%99%AF1%5B11749-1%5D.jpg?x-oss-process=image%2Fresize%2Cw_400&OSSAccessKeyId=LTAI5tE3ck6A2DexBqttYHVH&Expires=1728470560&Signature=f6AfAqonNcgf4r5H79%2BBfkUQJhM%3D', {
+            width: 500 ,
+            height: 500 ,
+            duration: 2000,
+            isContan: true,
+            easing: 'linear',
+            type: 'UncoverFromTop'
+        })
+        setTimeout(() => {
+            window.MoEffects.animate(document.getElementById('canvas'), 'https://novacloud-dev.oss-cn-hangzhou.aliyuncs.com/pingjl_sit/media/%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E5%A4%B9/%E9%A3%8E%E6%99%AF1%5B11749-1%5D.jpg?x-oss-process=image%2Fresize%2Cw_400&OSSAccessKeyId=LTAI5tE3ck6A2DexBqttYHVH&Expires=1728470560&Signature=f6AfAqonNcgf4r5H79%2BBfkUQJhM%3D', {
+                width: 500 ,
+                height: 500 ,
+                duration: 2000,
+                isContan: false,
+                easing: 'linear',
+                type: 'UncoverFromTop'
+            })
+        }, 3000)
+    }
+</script>
