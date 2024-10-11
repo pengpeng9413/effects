@@ -1,6 +1,6 @@
 import { engine, EngineHandler } from './engine'
 import Tween, { TweenHandler } from './tween'
-import { AnimateProps, animateFade, animateShutter, animateUncover, animateWheel, animateTooth, animateZoomFullScreen, animateStackIn, animatePullAndSlider } from './effects'
+import { AnimateProps, animateFade, animateShutter, animateUncover, animateWheel, animateTooth, animateZoomFullScreen, animateStackIn, animatePullAndSlider, expand, animateMergeDownAndUp, animateExpandDownAndUp } from './effects'
 
 // 支持的类型
 type EffectType =
@@ -103,7 +103,15 @@ const EffectsList: Array<EffectType> = [
   'TopLaser',
   'BottomLaser',
   'RightLaser',
-  'LeftLaser'
+  'LeftLaser',
+   // 向下展开
+   'ExpandDown',
+   // 向上展开
+   'ExpandUp' ,
+   // 上下展开
+   'ExpandDownAndUp',
+   // 上下合并
+   'MergeDownAndUp' 
 ]
 
 
@@ -215,7 +223,7 @@ const loadImage = (image: string | HTMLImageElement | File, isContan: boolean): 
  */
 const animate = function ($wrap: WithCustormPropsElement, image: HTMLImageElement, options: Props) {
   let { type, width, height, duration, easing,speed } = options
-
+  console.log("==type==",type);
   // 随机
   if (type === 'Random' || !EffectsList.includes(type)) {
     type = EffectsList[Math.floor(Math.random() * EffectsList.length)]
@@ -255,6 +263,19 @@ const animate = function ($wrap: WithCustormPropsElement, image: HTMLImageElemen
     case 'ScrollLeft':
     case 'ScrollRight':
       play = animatePullAndSlider(animateProps)
+      break
+    // 上下展开
+    case "ExpandUp":
+    case "ExpandDown":
+      play = expand(animateProps)
+      break
+    // 中间向上下展开
+    case "ExpandDownAndUp":
+      play=animateExpandDownAndUp(animateProps);
+      break
+    // 上下合并
+    case "MergeDownAndUp":
+      play=animateMergeDownAndUp(animateProps);
       break
     case 'UncoverFromTop':
     case 'UncoverFromBottom':

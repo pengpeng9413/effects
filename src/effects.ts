@@ -6,6 +6,9 @@ import { TweenHandler } from './tween'
 let offset = 0;
 /** 动画时间 */
 let totalSeconds =0;
+/** 当前绘制高度 */
+let expandDrawHeight =0;
+
 export interface AnimateProps {
   $el: WithCustormPropsElement
   img: HTMLImageElement
@@ -30,6 +33,8 @@ const SHUTTER_COUNT = 16
 const LASER_SCALE = 60
 // Mac电脑超过20000会有卡顿，这里设置个最大的阈值，并且和设备分辨率关联
 const MAX_RESOLUTION_RATIO  = 40000 / DEVICE_PIXEL_RATIO | 0
+
+
 
 /**
  * 获取真实物理像素，解决高清屏模糊
@@ -222,7 +227,6 @@ export const animatePullAndSlider = (props: AnimateProps): EngineHandler => {
     //   context.drawImage(img,type==='ScrollLeft'?width:-width,0,width,height);
     //   context.restore();
     // }
-    
     // 方案二
     const handler2 =(progress:number)=> {
       var context = canvas.getContext('2d');
@@ -252,6 +256,111 @@ export const animatePullAndSlider = (props: AnimateProps): EngineHandler => {
     return engine(handler, duration, easing, () => $el.__playing__ = false)
   }
 
+}
+
+/** 向上/下 展开 */
+export const expand=(props:AnimateProps):EngineHandler=>{
+  const { $el, width, height, img, duration, easing, type } = props
+  // 容器塞的canvas
+  const canvas = fillCanvasBeforePlay($el, width, height, img)
+  const ctx = canvas.getContext('2d')
+  // 额外创建canvas
+  let helper = createCanvas(width, height, img)
+  let helperCtx = helper.getContext('2d')
+
+  const { RW, RH } = getRatioSize(width, height)
+  // 方向是否为从上到下展开
+  const isFromTop = type === 'ExpandDown'
+
+  const handler = (progress: number) => {
+    ctx.clearRect(0, 0, RW, RH)
+    const h = progress * RH
+    // 常量
+    let y1 = isFromTop ? (RH - h - UNCOVER_SIZE) : (h + UNCOVER_SIZE)
+    y1 = Math.max(0, Math.min(y1, RH - UNCOVER_SIZE))
+    if (h >= 1) {
+      const mainData = helperCtx.getImageData(0, isFromTop ? 0 : RH - h, RW, h)
+      ctx.putImageData(mainData, 0, isFromTop ? 0 : RH - h + 1)
+    }
+  }
+
+  return engine(handler, duration, easing, () => {
+    helper = null
+    helperCtx = null
+    $el.__playing__ = false
+  })
+}
+
+/** 上下合并 */
+export const animateMergeDownAndUp=(props:AnimateProps):EngineHandler=>{
+  const { $el, width, height, img, duration, easing } = props
+  const canvas = fillCanvasBeforePlay($el, width, height)
+  const ctx = canvas.getContext('2d')
+  let helper = createCanvas(width, height, img)
+  let helperCtx = helper.getContext('2d')
+  const { RW, RH } = getRatioSize(width, height)
+
+  const handler = (progress: number) => {
+    // ctx.clearRect(0, 0, RW, RH)
+    if (progress === 0) {
+      return
+    }
+    const h = progress * RH
+    if(h>((RH+20)/2)) return;
+    if(h>=1){
+        // 上半部分向下
+        const imageData1 = helperCtx.getImageData(0, 0, RW, h)
+        ctx.putImageData(imageData1, 0,0)
+        // 下半部分向上
+        const imageData2 = helperCtx.getImageData(0, RH - h, RW, h)
+        ctx.putImageData(imageData2, 0,RH - h +1)
+    }
+  }
+
+  return engine(handler, duration, easing, () => {
+    helper = null
+    helperCtx = null
+    $el.__playing__ = false
+  })
+}
+
+/** 上下展开 */
+export const animateExpandDownAndUp=(props:AnimateProps):EngineHandler=>{
+  const { $el, width, height, img, duration, easing } = props
+  const canvas = fillCanvasBeforePlay($el, width, height)
+  const ctx = canvas.getContext('2d')
+  let helper = createCanvas(width, height, img)
+  let helperCtx = helper.getContext('2d')
+  const { RW, RH } = getRatioSize(width, height)
+  
+
+  const handler = (progress: number) => {
+    // ctx.clearRect(0, 0, RW, RH);
+    if (progress === 0) {
+      return
+    }
+    const h = progress * RH
+    if(h>((RH)/2)) return;
+    if(h>=1){
+      // 我要中间开始，往下,这个ok了
+      const imageData1 = helperCtx.getImageData(0, RH/2, RW, h)
+      ctx.putImageData(imageData1, 0,RH/2)
+
+      // 下半部分向上,底部开始
+      // const imageData1 = helperCtx.getImageData(0, RH - h, RW, h)
+      // ctx.putImageData(imageData1, 0,RH - h +1)
+
+      // 中间往上，到顶
+      const imageData2 = helperCtx.getImageData(0, RH/2 - h, RW, h)
+      ctx.putImageData(imageData2, 0,RH/2 - h +1)
+    }
+  }
+
+  return engine(handler, duration, easing, () => {
+    helper = null
+    helperCtx = null
+    $el.__playing__ = false
+  })
 }
 
 // 渐隐渐现(动画使用CSS)
@@ -305,22 +414,30 @@ export const animateShutter = (props: AnimateProps): EngineHandler => {
 // 卷轴
 export const animateUncover = (props: AnimateProps): EngineHandler => {
   const { $el, width, height, img, duration, easing, type } = props
+  // 容器塞的canvas
   const canvas = fillCanvasBeforePlay($el, width, height, img)
   const ctx = canvas.getContext('2d')
+  // 额外创建canvas
   let helper = createCanvas(width, height, img)
   let helperCtx = helper.getContext('2d')
+  // 再额外创建一个canvas
   let helper2 = createCanvas(width, height)
   let helper2Ctx = helper2.getContext('2d')
+
   const { RW, RH } = getRatioSize(width, height)
+  // 拿到helper canvas的像素数据
   const sourceData = helperCtx.getImageData(0, 0, RW, RH)
   const targetData = helperCtx.getImageData(0, 0, RW, RH)
+  // 拿到一个反转的像素数据
   const vImageData = getRevertImageData(sourceData, targetData)
+  // 写在第二个canvas上
   helper2Ctx.putImageData(vImageData, 0, 0)
   const isFromTop = type === 'UncoverFromTop'
 
   const handler = (progress: number) => {
     ctx.clearRect(0, 0, RW, RH)
     const h = progress * RH
+    // 常量
     let y1 = isFromTop ? (RH - h - UNCOVER_SIZE) : (h + UNCOVER_SIZE)
     y1 = Math.max(0, Math.min(y1, RH - UNCOVER_SIZE))
     const imageData = helper2Ctx.getImageData(0, y1, RW, UNCOVER_SIZE)
