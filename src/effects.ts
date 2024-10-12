@@ -1,4 +1,4 @@
-import { WithCustormPropsElement } from './'
+import { speedMap, WithCustormPropsElement } from './'
 import { engine, EngineHandler } from './engine'
 import { TweenHandler } from './tween'
 
@@ -204,6 +204,36 @@ const getTransformCssText = (type: string, progress: number, width: number, heig
   return `transform-origin:${origin}; transform:${transform};`
 }
 
+/** 左右滚动 */
+export const animateScroll=(props: AnimateProps): EngineHandler =>{
+  const { $el, width, height, img, duration, easing, type,speed=3 } = props
+   const canvas = fillCanvasBeforePlay($el, width, height, img)
+  const handler2 =(progress:number)=> {
+    var context = canvas.getContext('2d');
+    context.clearRect(0,0,width,height);
+    // 参考播控每帧播放速度
+    // var vx = (speed*60)/3; // vx为每秒移动像素值
+    let vx:number;
+    if(speed>2){
+      vx = (speed-2)*60;
+    }else{
+      vx = speedMap.get(speed);
+    }
+    const numImages = Math.ceil(canvas.width / width) + 1;
+    
+    const xpos = progress * vx % width;
+   
+    context.save();
+    context.translate(type==='ScrollLeft'?-xpos:xpos,0);
+    for (var i = 0; i < numImages; i++) {
+        context.drawImage(img, type==='ScrollLeft'?i * width:-i * width , 0,width,height);
+    }
+    context.restore();
+  }
+  
+  return engine(handler2, duration, easing, () => $el.__playing__ = false,true)
+}
+
 // 扩展和平移(动画使用CSS)
 export const animatePullAndSlider = (props: AnimateProps): EngineHandler => {
    const { $el, width, height, img, duration, easing, type,speed=3 } = props
@@ -244,9 +274,7 @@ export const animatePullAndSlider = (props: AnimateProps): EngineHandler => {
       }
       context.restore();
     }
-
     
-    // return engine(handler, duration, easing, () => $el.__playing__ = false,true)
     return engine(handler2, duration, easing, () => $el.__playing__ = false,true)
   }else{
       // 借助css 动画: 这行的作用是做初始化
