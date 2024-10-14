@@ -219,15 +219,49 @@ export const animateScroll=(props: AnimateProps): EngineHandler =>{
     }else{
       vx = speedMap.get(speed);
     }
-    const numImages = Math.ceil(canvas.width / width) + 1;
-    
-    const xpos = progress * vx % width;
+    const numImages = 2; 
+    // Math.ceil(canvas.width / width) + 1;
    
     context.save();
+
+    const { RW, RH } = getRatioSize(width, height);
+    // 如果是自适应的话
+    const isResponsive = img.getAttribute('data-isContan') === '1'
+
+    const xpos = progress * vx % width;
     context.translate(type==='ScrollLeft'?-xpos:xpos,0);
-    for (var i = 0; i < numImages; i++) {
-        context.drawImage(img, type==='ScrollLeft'?i * width:-i * width , 0,width,height);
+    if (isResponsive) {
+      const imgWidth = img.naturalWidth;
+      const imgHeight = img.naturalHeight;
+      let scaleX = canvas.width / imgWidth;
+      let scaleY = canvas.height / imgHeight;
+      let scaleToFit = Math.min(scaleX, scaleY); // 选择较小的缩放比例以完全适应Canvas
+
+      // 计算缩放后图片的宽度和高度
+      const scaledWidth = imgWidth * scaleToFit;
+      const scaledHeight = imgHeight * scaleToFit;
+
+      // 计算绘制图片的起始x和y坐标（居中显示）
+      const x = (canvas.width - scaledWidth) / 2;
+      const y = (canvas.height - scaledHeight) / 2;
+      
+      for (var i = 0; i < numImages; i++) {
+          // x, y 应该根据i 值动态变 
+          if(type==='ScrollLeft'){
+            context.drawImage(img, i===0?x:x+RW,y,scaledWidth,scaledHeight);
+          }else{
+            context.drawImage(img, i===0?-x:-i*(x+RW),y,scaledWidth,scaledHeight);
+          }
+        }
+    } else { // 目前是正常的
+     
+      for (var i = 0; i < numImages; i++) {
+      // 绘制的点不对
+        context.drawImage(img, type==='ScrollLeft'?i * RW:-i * RW , 0,RW,RH);
+      }
     }
+    
+   
     context.restore();
   }
   
@@ -236,53 +270,14 @@ export const animateScroll=(props: AnimateProps): EngineHandler =>{
 
 // 扩展和平移(动画使用CSS)
 export const animatePullAndSlider = (props: AnimateProps): EngineHandler => {
-   const { $el, width, height, img, duration, easing, type,speed=3 } = props
+   const { $el, width, height, img, duration, easing, type } = props
    const canvas = fillCanvasBeforePlay($el, width, height, img)
   
-  if(type==='ScrollLeft' || type ==='ScrollRight'){
-    // 向左滚动
-    // const speed = 3; // 每帧的速度，每帧移动两个单位，todo： 这个要结合屏精灵的代码进行速度参数设置，每帧移动2px
-
-    // 第一版 方案 ：有点问题
-    // const handler = (progress:number)=> {
-    //   var context = canvas.getContext('2d');
-    //   // 清掉前一帧画上去的像素
-    //   context.clearRect(0,0,width,height);
-    //   context.save();
-    //   // 每帧不断累加这个偏移值
-    //   offset = offset < width ? (offset + speed) : (offset - width);
-    //   // translate 正值为向右移动，负值为向左移动
-    //   context.translate(type==='ScrollLeft'?-offset:offset,0); 
-    //   context.drawImage(img,0,0,width,height);
-    //   context.drawImage(img,type==='ScrollLeft'?width:-width,0,width,height);
-    //   context.restore();
-    // }
-    // 方案二
-    const handler2 =(progress:number)=> {
-      var context = canvas.getContext('2d');
-      context.clearRect(0,0,width,height);
-
-      var vx = (speed*60)/3; // vx为每秒移动像素值
-      var numImages = Math.ceil(canvas.width / width) + 1;
-      
-      var xpos = progress * vx % width;
-     
-      context.save();
-      context.translate(type==='ScrollLeft'?-xpos:xpos,0);
-      for (var i = 0; i < numImages; i++) {
-          context.drawImage(img, type==='ScrollLeft'?i * width:-i * width , 0,width,height);
-      }
-      context.restore();
-    }
-    
-    return engine(handler2, duration, easing, () => $el.__playing__ = false,true)
-  }else{
-      // 借助css 动画: 这行的作用是做初始化
-    canvas.style.cssText += getTransformCssText(type, 0, width, height)
-    // 这里handler 涉及缓动特效参数
-    const handler = (progress: number) => canvas.style.cssText += getTransformCssText(type, progress, width, height)
-    return engine(handler, duration, easing, () => $el.__playing__ = false)
-  }
+   // 借助css 动画: 这行的作用是做初始化
+   canvas.style.cssText += getTransformCssText(type, 0, width, height)
+   // 这里handler 涉及缓动特效参数
+   const handler = (progress: number) => canvas.style.cssText += getTransformCssText(type, progress, width, height)
+   return engine(handler, duration, easing, () => $el.__playing__ = false)
 
 }
 
@@ -329,7 +324,6 @@ export const animateMergeDownAndUp=(props:AnimateProps):EngineHandler=>{
   const { RW, RH } = getRatioSize(width, height)
 
   const handler = (progress: number) => {
-    // ctx.clearRect(0, 0, RW, RH)
     if (progress === 0) {
       return
     }
@@ -363,20 +357,15 @@ export const animateExpandDownAndUp=(props:AnimateProps):EngineHandler=>{
   
 
   const handler = (progress: number) => {
-    // ctx.clearRect(0, 0, RW, RH);
     if (progress === 0) {
       return
     }
     const h = progress * RH
     if(h>((RH)/2)) return;
     if(h>=1){
-      // 我要中间开始，往下,这个ok了
+      // 我要中间开始，往下,
       const imageData1 = helperCtx.getImageData(0, RH/2, RW, h)
       ctx.putImageData(imageData1, 0,RH/2)
-
-      // 下半部分向上,底部开始
-      // const imageData1 = helperCtx.getImageData(0, RH - h, RW, h)
-      // ctx.putImageData(imageData1, 0,RH - h +1)
 
       // 中间往上，到顶
       const imageData2 = helperCtx.getImageData(0, RH/2 - h, RW, h)

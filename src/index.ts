@@ -13,6 +13,7 @@ import {
   expand,
   animateMergeDownAndUp,
   animateExpandDownAndUp,
+  animateScroll,
 } from "./effects";
 
 // 支持的类型
@@ -252,7 +253,6 @@ const animate = function (
   options: Props
 ) {
   let { type, width, height, duration, easing, speed } = options;
-  console.log("==type==", type);
   // 随机
   if (type === "Random" || !EffectsList.includes(type)) {
     type = EffectsList[Math.floor(Math.random() * EffectsList.length)];
@@ -292,9 +292,12 @@ const animate = function (
     case "PressInRight":
     case "PressInX":
     case "PressInY":
+      play = animatePullAndSlider(animateProps);
+      break;
+    // 左右滚动
     case "ScrollLeft":
     case "ScrollRight":
-      play = animatePullAndSlider(animateProps);
+      play = animateScroll(animateProps);
       break;
     // 上下展开
     case "ExpandUp":
