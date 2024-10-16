@@ -2,7 +2,7 @@
  * @Author: xiexp
  * @Description:
  * @Date: 2024-10-08 17:44:41
- * @LastEditTime: 2024-10-10 17:17:00
+ * @LastEditTime: 2024-10-16 16:03:41
  * @FilePath: \effects\src\engine.ts
  */
 import { Tween, TweenHandler } from "./tween";
@@ -55,9 +55,6 @@ export const engine = (
       handler(1);
       complete && complete();
       play.cancel();
-    }else if(isScroll){
-      handler((time - start)/1000);
-      play();
     }else {
       //  0 < fraction <1
       const progress = easing(fraction);
